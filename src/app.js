@@ -10,7 +10,9 @@ app.use(express.static('public'))
 import userRouter from './routes/user.routes.js';
 import vendorRouter from './routes/vendor.routes.js';
 import materialRouter from './routes/material.routes.js'
+import orderRouter from './routes/order.routes.js'
 app.use('/api/v1/users',userRouter);
 app.use('/api/v1/vendors',vendorRouter);
 app.use('/api/v1/materials',materialRouter);
+app.use('/api/v1/orders',orderRouter);
 export { app }

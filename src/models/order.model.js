@@ -7,6 +7,10 @@ const orderSchema = new mongoose.Schema({
   costPerUnit: { type: Number, required: true },
   totalCost: { type: Number, required: true },
   status: { type: String, default: 'Pending' },
-});
+},
+{
+  timestamps: true
+}
+);
 
-module.exports = mongoose.model('Order', orderSchema);
+export const Order = mongoose.model('Order', orderSchema);
