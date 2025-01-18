@@ -1,3 +1,9 @@
+# Ignore package.json and package-lock.json
+package.json
+package-lock.json
+# Ignore constants.js in src
+src/constants.js
+
 # Logs
 logs
 *.log
