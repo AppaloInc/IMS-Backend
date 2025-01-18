@@ -5,7 +5,12 @@ const vendorSchema = new mongoose.Schema({
   contact: { type: String, required: true }, // Contact number
   email: { type: String, required: true, unique: true }, // Vendor email (unique)
   address: { type: String, required: true }, // Vendor address
-  materials: [{ type: mongoose.Schema.Types.ObjectId, ref: "Material" }], // List of materials supplied by the vendor
+  materials: [
+    {
+      material: { type: mongoose.Schema.Types.ObjectId, ref: "Material", required: true }, // Material ID
+      costPerUnit: { type: Number, required: true }, // Cost per unit for this vendor
+    },
+  ],
 });
 
 export const Vendor = mongoose.model("Vendor", vendorSchema);

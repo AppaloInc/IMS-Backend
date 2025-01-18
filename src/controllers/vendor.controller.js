@@ -7,30 +7,41 @@ import { Material } from "../models/material.model.js";
 export const addVendor = async (req, res) => {
   try {
     const { name, contact, email, address, materials } = req.body;
-
-
     // Check if the vendor already exists
     const existingVendor = await Vendor.findOne({ $or: [{ name }, { email }] });
     if (existingVendor) {
       return res.status(400).json({ message: "Vendor already exists" });
     }
 
-    // Convert material names to IDs
-    const materialDocs = await Material.find({ name: { $in: materials } });
+    // Validate materials and map to their IDs with costPerUnit
+    const materialNames = materials.map((item) => item.name);
+    const materialDocs = await Material.find({ name: { $in: materialNames } });
 
     if (materialDocs.length !== materials.length) {
       const foundNames = materialDocs.map((m) => m.name);
-      const missingMaterials = materials.filter((name) => !foundNames.includes(name));
+      const missingMaterials = materialNames.filter((name) => !foundNames.includes(name));
       return res.status(400).json({
         message: `Some materials not found: ${missingMaterials.join(", ")}`,
       });
     }
 
-    // Extract IDs from found materials
-    const materialIds = materialDocs.map((m) => m._id);
+    // Map material IDs with costPerUnit
+    const materialsWithCost = materials.map((item) => {
+      const materialDoc = materialDocs.find((m) => m.name === item.name);
+      return {
+        material: materialDoc._id,
+        costPerUnit: item.costPerUnit,
+      };
+    });
 
     // Create the vendor
-    const vendor = new Vendor({ name, contact, email, address, materials: materialIds });
+    const vendor = new Vendor({
+      name,
+      contact,
+      email,
+      address,
+      materials: materialsWithCost,
+    });
     await vendor.save();
 
     res.status(201).json({ message: "Vendor added successfully", vendor });
@@ -47,28 +58,36 @@ export const editVendor = async (req, res) => {
     const { id } = req.params;
     const { materials, ...updates } = req.body;
 
-    let materialIds;
+    let materialsWithCost;
     if (materials) {
-      // Convert material names to IDs
-      const materialDocs = await Material.find({ name: { $in: materials } });
+      // Validate materials and map to their IDs with costPerUnit
+      const materialNames = materials.map((item) => item.name);
+      const materialDocs = await Material.find({ name: { $in: materialNames } });
 
       if (materialDocs.length !== materials.length) {
         const foundNames = materialDocs.map((m) => m.name);
-        const missingMaterials = materials.filter((name) => !foundNames.includes(name));
+        const missingMaterials = materialNames.filter((name) => !foundNames.includes(name));
         return res.status(400).json({
           message: `Some materials not found: ${missingMaterials.join(", ")}`,
         });
       }
 
-      materialIds = materialDocs.map((m) => m._id);
+      // Map material IDs with costPerUnit
+      materialsWithCost = materials.map((item) => {
+        const materialDoc = materialDocs.find((m) => m.name === item.name);
+        return {
+          material: materialDoc._id,
+          costPerUnit: item.costPerUnit,
+        };
+      });
     }
 
     // Update the vendor
     const updatedVendor = await Vendor.findByIdAndUpdate(
       id,
-      { ...updates, ...(materialIds && { materials: materialIds }) },
+      { ...updates, ...(materialsWithCost && { materials: materialsWithCost }) },
       { new: true }
-    ).populate("materials");
+    ).populate("materials.material");
 
     if (!updatedVendor) {
       return res.status(404).json({ message: "Vendor not found" });
@@ -100,18 +119,28 @@ export const deleteVendor = async (req, res) => {
   
   export const getAllVendors = async (req, res) => {
     try {
-      // Fetch all vendors and populate the materials field with the name and costPerUnit of each material
-      const vendors = await Vendor.find()
-        .populate({
-          path: "materials", // Populate the materials array directly
-          select: "name -_id" // Select only name
-        });
+      // Fetch all vendors and populate the materials array with the name of each material
+      const vendors = await Vendor.find().populate({
+        path: "materials.material", // Populate the material field inside the materials array
+        select: "name", // Only select the name of the material
+      });
   
-      // Return the modified vendors array with the populated materials
-      res.status(200).json({ message: "Vendors retrieved successfully", vendors });
+      // Modify materials to flatten the structure and include name, costPerUnit, and _id
+      const modifiedVendors = vendors.map((vendor) => ({
+        ...vendor.toObject(), // Convert Mongoose document to plain object
+        materials: vendor.materials.map((material) => ({
+          name: material.material?.name || null, // Material name
+          costPerUnit: material.costPerUnit, // Cost per unit
+          // _id: material._id, // Material entry ID
+        })),
+      }));
+  
+      res.status(200).json({ message: "Vendors retrieved successfully", vendors: modifiedVendors });
     } catch (error) {
       res.status(500).json({ message: "Error retrieving vendors", error: error.message });
     }
   };
+  
+  
   
   

@@ -5,7 +5,7 @@ import { Material } from "../models/material.model.js";
  */
 export const addMaterial = async (req, res) => {
   try {
-    const { name, stock, unit, costPerUnit, description } = req.body;
+    const { name, stock, unit, description } = req.body;
 
     // Check if the material already exists
     const existingMaterial = await Material.findOne({ name });
@@ -14,7 +14,7 @@ export const addMaterial = async (req, res) => {
     }
 
     // Create a new material
-    const material = new Material({ name, stock, unit, costPerUnit, description });
+    const material = new Material({ name, stock, unit, description });
     await material.save();
 
     res.status(201).json({ message: "Material added successfully", material });
