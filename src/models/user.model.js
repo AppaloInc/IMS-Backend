@@ -12,13 +12,18 @@ const userSchema = new Schema(
             trim: true, 
             index: true
         },
-        email: {
-            type: String,
-            required: true,
-            unique: true,
-            lowecase: true,
-            trim: true, 
-        },
+        email: { 
+            type: String, 
+            required: true, 
+            unique: true, 
+            validate: {
+              validator: function (value) {
+                // Basic email regex to check for the presence of "@" and "."
+                return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+              },
+              message: "Invalid email format" // Custom error message for invalid email
+            }
+          },
         fullName: {
             type: String,
             required: true,

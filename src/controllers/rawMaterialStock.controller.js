@@ -5,7 +5,7 @@ import { Material } from "../models/material.model.js";
  */
 export const addMaterial = async (req, res) => {
   try {
-    const { name, stock, unit, description } = req.body;
+    const { name, stock, unit, threshold, description } = req.body;
 
     // Check if the material already exists
     const existingMaterial = await Material.findOne({ name });
@@ -14,7 +14,7 @@ export const addMaterial = async (req, res) => {
     }
 
     // Create a new material
-    const material = new Material({ name, stock, unit, description });
+    const material = new Material({ name, stock, unit, threshold, description });
     await material.save();
 
     res.status(201).json({ message: "Material added successfully", material });
@@ -28,12 +28,21 @@ export const addMaterial = async (req, res) => {
  */
 export const getMaterials = async (req, res) => {
   try {
-    const materials = await Material.find();
+    const materials = await Material.aggregate([
+      {
+        $addFields: {
+          isLowStock: { $lt: ["$stock", "$threshold"] }
+        }
+      },
+      { $sort: { isLowStock: -1, threshold: 1, stock: 1 } } // Prioritize low stock, then sort
+    ]);
+
     res.status(200).json(materials);
   } catch (error) {
     res.status(500).json({ message: "Error fetching materials", error: error.message });
   }
 };
+
 
 /**
  * Edit an existing material

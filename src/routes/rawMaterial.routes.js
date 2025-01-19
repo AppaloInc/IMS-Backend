@@ -1,5 +1,5 @@
 import express from "express";
-import { addMaterial, getMaterials, editMaterial, deleteMaterial } from "../controllers/stock.controller.js";
+import { addMaterial, getMaterials, editMaterial, deleteMaterial } from "../controllers/rawMaterialStock.controller.js";
 
 const router = express.Router();
 
