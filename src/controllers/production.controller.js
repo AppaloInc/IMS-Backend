@@ -246,3 +246,47 @@ export const getAllProductions = async (req, res) => {
     });
   }
 };
+
+export const deleteProduction = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Find the production record
+    const existingProduction = await Production.findById(id).populate(
+      "quantityOfRawMaterials.rawMaterialId"
+    );
+    if (!existingProduction) {
+      return res.status(404).json({ message: "Production record not found" });
+    }
+
+    // Revert raw material stock
+    for (const item of existingProduction.quantityOfRawMaterials) {
+      const rawMaterial = item.rawMaterialId; // Populated rawMaterialId contains the document
+      if (rawMaterial) {
+        rawMaterial.stock += item.quantity; // Increment stock by used quantity
+        await rawMaterial.save();
+      }
+    }
+
+    // Revert product quantity
+    const product = await Product.findById(existingProduction.productId);
+    if (product) {
+      product.quantity -= existingProduction.noOfUnitsProduced; // Decrease product quantity
+      if (product.quantity < 0) product.quantity = 0; // Ensure quantity doesn't go below zero
+      await product.save();
+    }
+
+    // Delete the production record
+    await existingProduction.deleteOne();
+
+    res.status(200).json({
+      message: "Production record deleted successfully and changes reverted",
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error deleting production record",
+      error: error.message,
+    });
+  }
+};
+

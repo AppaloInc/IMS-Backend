@@ -7,25 +7,27 @@ import {
     deleteOrder, 
     receiveOrder 
 } from '../controllers/order.controller.js';
+import { verifyJWT } from "../middlewares/auth.middleware.js";
+
 
 const router = express.Router();
 
 // Route to create a new order
-router.post('/add-order', createOrder);
+router.post('/add-order', verifyJWT, createOrder);
 
 // Route to get all orders
-router.get('/', getAllOrders);
+router.get('/', verifyJWT, getAllOrders);
 
 // Route to get an order by ID
 // router.get('/:orderId', getOrderById);
 
 // Route to update an order
-router.put('/:id', editOrder);
+router.put('/:id', verifyJWT, editOrder);
 
 // Route to delete an order
-router.delete('/:id', deleteOrder);
+router.delete('/:id', verifyJWT, deleteOrder);
 
 // Route to mark an order as received
-router.post('/receive/:id', receiveOrder);
+router.post('/receive/:id', verifyJWT, receiveOrder);
 
 export default router;

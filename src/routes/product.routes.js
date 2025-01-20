@@ -6,22 +6,24 @@ import {
     updateProduct,
     deleteProduct,
 } from '../controllers/product.controller.js';
+import { verifyJWT } from "../middlewares/auth.middleware.js";
+
 
 const router = express.Router();
 
 // Route to create a new product
-router.post('/add-product', createProduct);
+router.post('/add-product', verifyJWT, createProduct);
 
 // Route to fetch all products
-router.get('/', getAllProducts);
+router.get('/', verifyJWT, getAllProducts);
 
 // Route to fetch a product by ID
-router.get('/:id', getProductById);
+router.get('/:id', verifyJWT, getProductById);
 
 // Route to update a product by ID
-router.put('/:id', updateProduct);
+router.put('/:id', verifyJWT, updateProduct);
 
 // Route to delete a product by ID
-router.delete('/:id', deleteProduct);
+router.delete('/:id', verifyJWT,deleteProduct);
 
 export default router;
