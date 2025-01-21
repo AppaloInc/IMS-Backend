@@ -1,5 +1,5 @@
 import express from "express";
-import { addMaterial, getMaterials, editMaterial, deleteMaterial } from "../controllers/rawMaterialStock.controller.js";
+import { addMaterial, getMaterials, editMaterial, deleteMaterial, getMaterialById } from "../controllers/rawMaterialStock.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 const router = express.Router();
 
@@ -8,6 +8,7 @@ router.post("/add-material", verifyJWT, addMaterial);
 
 // Get all materials
 router.get("/", verifyJWT, getMaterials);
+router.get('/:id', verifyJWT, getMaterialById)
 
 // Edit a material by ID
 router.put("/:id", verifyJWT, editMaterial);

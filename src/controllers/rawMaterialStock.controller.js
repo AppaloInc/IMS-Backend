@@ -84,3 +84,24 @@ export const deleteMaterial = async (req, res) => {
     res.status(500).json({ message: "Error deleting material", error: error.message });
   }
 };
+
+/**
+ * Get material by ID
+ */
+export const getMaterialById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Find material by ID
+    const material = await Material.findById(id);
+
+    if (!material) {
+      return res.status(404).json({ message: "Material not found" });
+    }
+
+    res.status(200).json({ message: "Material fetched successfully", material });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching material", error: error.message });
+  }
+};
+
