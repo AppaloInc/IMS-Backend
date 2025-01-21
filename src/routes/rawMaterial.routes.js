@@ -7,7 +7,7 @@ const router = express.Router();
 router.post("/add-material", verifyJWT, addMaterial);
 
 // Get all materials
-router.get("/", verifyJWT, getMaterials);
+router.get("/", getMaterials);
 
 // Edit a material by ID
 router.put("/:id", verifyJWT, editMaterial);
