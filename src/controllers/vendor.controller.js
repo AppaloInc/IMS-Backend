@@ -141,6 +141,39 @@ export const deleteVendor = async (req, res) => {
     }
   };
   
+/**
+ * Get a vendor by ID
+ */
+export const getVendorById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Find vendor by ID and populate materials
+    const vendor = await Vendor.findById(id).populate({
+      path: "materials.material", // Populate the material field
+      select: "name", // Only select the name of the material
+    });
+
+    if (!vendor) {
+      return res.status(404).json({ message: "Vendor not found" });
+    }
+
+    // Modify the materials structure
+    const modifiedVendor = {
+      ...vendor.toObject(), // Convert Mongoose document to plain object
+      materials: vendor.materials.map((material) => ({
+        name: material.material?.name || null, // Material name
+        costPerUnit: material.costPerUnit, // Cost per unit
+        // _id: material._id, // Material entry ID (optional)
+      })),
+    };
+
+    res.status(200).json({ message: "Vendor retrieved successfully", vendor: modifiedVendor });
+  } catch (error) {
+    res.status(500).json({ message: "Error retrieving vendor", error: error.message });
+  }
+};
+
   
   
   

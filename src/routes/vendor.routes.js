@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
-import { addVendor, getAllVendors, editVendor, deleteVendor } from "../controllers/vendor.controller.js";
+import { addVendor, getAllVendors, editVendor, deleteVendor, getVendorById } from "../controllers/vendor.controller.js";
 const router = Router();
 
 
@@ -10,6 +10,8 @@ router.post("/add-vendor", verifyJWT, addVendor);
 
 // Get all vendors (with materials)
 router.get("/", verifyJWT, getAllVendors);
+router.get("/:id", verifyJWT, getVendorById);
+
 
 // Edit a vendor by ID
 router.put("/:id", verifyJWT, editVendor);
