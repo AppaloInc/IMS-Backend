@@ -2,7 +2,7 @@
 package.json
 package-lock.json
 # Ignore constants.js in src
-src/constants.js
+# src/constants.js
 
 # Logs
 logs
