@@ -126,7 +126,7 @@ export const updateSale = async (req, res) => {
       await product.save();
   
       // Delete the sale record
-      await sale.remove();
+      await Sales.deleteOne({ _id: id });
   
       res.status(200).json({ message: "Sale deleted successfully" });
     } catch (error) {
@@ -136,6 +136,7 @@ export const updateSale = async (req, res) => {
       });
     }
   };
+  
 
   export const getAllSales = async (req, res) => {
     try {
