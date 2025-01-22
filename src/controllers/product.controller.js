@@ -73,21 +73,41 @@ export const getAllProducts = async (req, res) => {
   };
   
 
-// Get a single product by ID
+/**
+ * Get a product by ID
+ */
 export const getProductById = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const product = await Product.findById(id).populate('rawMaterials', 'name');
+  try {
+    const { id } = req.params;
 
-        if (!product) {
-            return res.status(404).json({ message: "Product not found" });
-        }
+    // Find product by ID and populate rawMaterials with their names
+    const product = await Product.findById(id).populate('rawMaterials', 'name');
 
-        res.status(200).json({ message: "Product retrieved successfully", product });
-    } catch (error) {
-        res.status(500).json({ message: "Error retrieving product", error: error.message });
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
     }
+
+    // Format the response to exclude _id from rawMaterials
+    const formattedProduct = {
+      _id: product._id,
+      name: product.name,
+      quantity: product.quantity,
+      pricePerUnit: product.pricePerUnit,
+      rawMaterials: product.rawMaterials.map(material => ({
+        name: material.name,
+      })),
+      __v: product.__v,
+    };
+
+    res.status(200).json({
+      message: "Product retrieved successfully",
+      product: formattedProduct,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error retrieving product", error: error.message });
+  }
 };
+
 
 // Update a product
 export const updateProduct = async (req, res) => {

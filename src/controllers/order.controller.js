@@ -174,3 +174,35 @@ export const deleteOrder = async (req, res) => {
         res.status(500).json({ message: "Error deleting order", error: error.message });
     }
 };
+
+
+export const getOrderById = async (req, res) => {
+    try {
+      const { id } = req.params;
+  
+      // Find order by ID and populate vendor and material details
+      const order = await Order.findById(id)
+        .populate("vendor", "name") // Populate vendor name
+        .populate("material", "name"); // Populate material name
+  
+      if (!order) {
+        return res.status(404).json({ message: "Order not found" });
+      }
+  
+      // Format response to include names instead of IDs
+      const formattedOrder = {
+        _id: order._id,
+        vendor: order.vendor?.name || null, // Vendor name
+        material: order.material?.name || null, // Material name
+        quantity: order.quantity,
+        costPerUnit: order.costPerUnit,
+        totalCost: order.totalCost,
+        status: order.status,
+      };
+  
+      res.status(200).json({ message: "Order retrieved successfully", order: formattedOrder });
+    } catch (error) {
+      res.status(500).json({ message: "Error retrieving order", error: error.message });
+    }
+  };
+  

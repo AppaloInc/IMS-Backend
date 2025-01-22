@@ -247,6 +247,46 @@ export const getAllProductions = async (req, res) => {
   }
 };
 
+/**
+ * Get a production by ID
+ */
+export const getProductionById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Find production by ID
+    const production = await Production.findById(id)
+      .populate("productId", "name") // Populate productId with its name
+      .populate("quantityOfRawMaterials.rawMaterialId", "name"); // Populate rawMaterialId with its name
+
+    if (!production) {
+      return res.status(404).json({ message: "Production not found" });
+    }
+
+    // Format the response
+    const formattedProduction = {
+      productionId: production._id,
+      productName: production.productId.name,
+      noOfUnitsProduced: production.noOfUnitsProduced,
+      quantityOfRawMaterials: production.quantityOfRawMaterials.map((item) => ({
+        rawMaterialName: item.rawMaterialId.name,
+        quantity: item.quantity,
+      })),
+    };
+
+    res.status(200).json({
+      message: "Production retrieved successfully",
+      production: formattedProduction,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error retrieving production",
+      error: error.message,
+    });
+  }
+};
+
+
 export const deleteProduction = async (req, res) => {
   try {
     const { id } = req.params;

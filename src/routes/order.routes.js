@@ -2,7 +2,7 @@ import express from 'express';
 import { 
     createOrder, 
     getAllOrders, 
-    // getOrderById, 
+    getOrderById, 
     editOrder, 
     deleteOrder, 
     receiveOrder 
@@ -17,6 +17,7 @@ router.post('/add-order', verifyJWT, createOrder);
 
 // Route to get all orders
 router.get('/', verifyJWT, getAllOrders);
+router.get('/:id',verifyJWT, getOrderById)
 
 // Route to get an order by ID
 // router.get('/:orderId', getOrderById);

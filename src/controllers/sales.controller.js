@@ -176,3 +176,44 @@ export const updateSale = async (req, res) => {
   };
   
   
+/**
+ * Get a sale by ID
+ */
+export const getSaleById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Find sale by ID
+    const sale = await Sales.findById(id)
+      .populate("productId", "name pricePerUnit") // Populate productId with its name and pricePerUnit
+      .exec();
+
+    if (!sale) {
+      return res.status(404).json({ message: "Sale not found" });
+    }
+
+    // Calculate total sale for the record
+    const totalSale = sale.noOfUnitsSold * sale.productId.pricePerUnit;
+
+    // Format the response
+    const formattedSale = {
+      saleId: sale._id,
+      productName: sale.productId.name,
+      customerName: sale.customerName,
+      noOfUnitsSold: sale.noOfUnitsSold,
+      totalSale,
+      pricePerUnit: sale.productId.pricePerUnit,
+      createdAt: sale.createdAt,
+    };
+
+    res.status(200).json({
+      message: "Sale retrieved successfully",
+      sale: formattedSale,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error retrieving sale",
+      error: error.message,
+    });
+  }
+};
