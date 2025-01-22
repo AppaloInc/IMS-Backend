@@ -145,12 +145,62 @@ const logoutUser = asyncHandler(async (req, res) => {
     .json(new apiResponse(200, {}, "User logged Out"));
 });
 
+// const refreshAccessToken = asyncHandler(async (req, res) => {
+//   const incomingRefreshToken =
+//     req.cookies.refreshToken || req.body.refreshToken;
+//   //in case of mobile app development req.body.refreshToken
+//   if (!incomingRefreshToken) {
+//     throw new apiError(401, "unauthorized request");
+//   }
+
+//   try {
+//     const decodedToken = jwt.verify(
+//       incomingRefreshToken,
+//       process.env.REFRESH_TOKEN_SECRET
+//     );
+
+//     const user = await User.findById(decodedToken?._id);
+
+//     if (!user) {
+//       throw new apiError(401, "Invalid refresh token");
+//     }
+
+//     if (incomingRefreshToken !== user?.refreshToken) {
+//       throw new apiError(401, "Refresh token is expired or used");
+//     }
+
+//     const options = {
+//       httpOnly: true,
+//       secure: true,
+//     };
+
+//     const { accessToken, newRefreshToken } =
+//       await generateAccessAndRefereshTokens(user._id);
+
+//     return res
+//       .status(200)
+//       .cookie("accessToken", accessToken, options)
+//       .cookie("refreshToken", newRefreshToken, options)
+//       .json(
+//         new apiResponse(
+//           200,
+//           { accessToken, refreshToken: newRefreshToken },
+//           "Access token refreshed"
+//         )
+//       );
+//   } catch (error) {
+//     throw new apiError(401, error?.message || "Invalid refresh token");
+//   }
+// });
 const refreshAccessToken = asyncHandler(async (req, res) => {
   const incomingRefreshToken =
-    req.cookies.refreshToken || req.body.refreshToken;
-  //in case of mobile app development req.body.refreshToken
+    req.header("x-refresh-token") || // Check the custom header
+    req.header("Authorization")?.replace("Bearer ", "") || // Check the Authorization header
+    req.cookies.refreshToken || // Check cookies
+    req.body.refreshToken; // Check the request body
+
   if (!incomingRefreshToken) {
-    throw new apiError(401, "unauthorized request");
+    throw new apiError(401, "Unauthorized request: Refresh token missing");
   }
 
   try {
@@ -162,7 +212,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     const user = await User.findById(decodedToken?._id);
 
     if (!user) {
-      throw new apiError(401, "Invalid refresh token");
+      throw new apiError(401, "Invalid refresh token: User not found");
     }
 
     if (incomingRefreshToken !== user?.refreshToken) {
