@@ -49,7 +49,7 @@ export const createProduct = async (req, res) => {
 export const getAllProducts = async (req, res) => {
     try {
       // Fetch all products and populate rawMaterials with only the name
-      const products = await Product.find().populate('rawMaterials', 'name');
+      const products = await Product.find({ isAvailable: true }).populate('rawMaterials', 'name');
   
       // Format the products to exclude _id from rawMaterials
       const formattedProducts = products.map(product => ({
