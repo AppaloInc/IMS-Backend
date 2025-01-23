@@ -19,6 +19,10 @@ const productSchema = new mongoose.Schema({
       required: true 
     }
   ],
+  isAvailable: { //alternative to delete
+    type: Boolean, 
+    default: true // Products are available by default
+  },
 });
 
 export const Product = mongoose.model('Product', productSchema);

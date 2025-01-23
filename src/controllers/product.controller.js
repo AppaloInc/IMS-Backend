@@ -160,17 +160,22 @@ export const updateProduct = async (req, res) => {
 
 // Delete a product
 export const deleteProduct = async (req, res) => {
-    try {
-        const { id } = req.params;
+  try {
+    const { id } = req.params;
 
-        // Find and delete the product
-        const product = await Product.findByIdAndDelete(id);
-        if (!product) {
-            return res.status(404).json({ message: "Product not found" });
-        }
+    // Find the product and update its availability
+    const product = await Product.findByIdAndUpdate(
+        id, 
+        { isAvailable: false }, // Set isAvailable to false
+        { new: true } // Return the updated document
+    );
 
-        res.status(200).json({ message: "Product deleted successfully", product });
-    } catch (error) {
-        res.status(500).json({ message: "Error deleting product", error: error.message });
+    if (!product) {
+        return res.status(404).json({ message: "Product not found" });
     }
+
+    res.status(200).json({ message: "Product marked as unavailable", product });
+} catch (error) {
+    res.status(500).json({ message: "Error marking product as unavailable", error: error.message });
+}
 };
