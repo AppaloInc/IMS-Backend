@@ -55,9 +55,11 @@ export const createOrder = async (req, res) => {
 // Get all orders
 export const getAllOrders = async (req, res) => {
     try {
+        // Fetch orders, populate references, and sort by status (Pending first, then Received)
         const orders = await Order.find()
             .populate("vendor", "name")
-            .populate("material", "name");
+            .populate("material", "name")
+            .sort({ status: 1 }); // Assuming "Pending" comes before "Received" lexicographically or numerically
 
         // Format response to include names instead of IDs
         const formattedOrders = orders.map(order => ({
@@ -75,6 +77,7 @@ export const getAllOrders = async (req, res) => {
         res.status(500).json({ message: "Error retrieving orders", error: error.message });
     }
 };
+
 
 // Update order status to 'Received' and update material stock
 export const receiveOrder = async (req, res) => {
