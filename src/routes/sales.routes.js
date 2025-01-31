@@ -12,8 +12,8 @@ import { verifyJWT } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
 
-router.get("/sales-detail/", getSalesByPagination);
-router.get("/", getAllSales);
+router.get("/sales-detail/", verifyJWT, getSalesByPagination);
+router.get("/", verifyJWT, getAllSales);
 router.post("/add-sale", verifyJWT, createSale);
 router.get("/:id", verifyJWT, getSaleById);
 router.put("/:id", verifyJWT, updateSale);
