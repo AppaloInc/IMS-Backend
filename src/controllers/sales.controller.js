@@ -175,6 +175,54 @@ export const updateSale = async (req, res) => {
       });
     }
   };
+
+
+  export const getSalesByPagination = async (req, res) => {
+    try {
+      const page = parseInt(req.query.page) || 1; // Default page is 1
+      const limit = 10; // Number of vendors per page
+      const skip = (page - 1) * limit; // Calculate the number of documents to skip
+  
+      // Fetch paginated sales
+      const sales = await Sales.find()
+        .populate("productId", "name pricePerUnit") // Populate productId with name and pricePerUnit
+        .skip(skip)
+        .limit(limit)
+        .exec();
+  
+      // Calculate total sales for each record
+  
+      const formattedSales = sales.map((sale) => {
+        const saleAmount = sale.noOfUnitsSold * sale.productId.pricePerUnit;
+  
+        return {
+          saleId: sale._id,
+          productName: sale.productId.name,
+          customerName: sale.customerName,
+          noOfUnitsSold: sale.noOfUnitsSold,
+          totalSale: saleAmount,
+          pricePerUnit: sale.productId.pricePerUnit,
+          createdAt: sale.createdAt,
+        };
+      });
+  
+      // Get total number of sales (for pagination info)
+      const totalSales = await Sales.countDocuments();
+  
+      res.status(200).json({
+        message: "Sales retrieved successfully",
+        sales: formattedSales,
+        currentPage: page,
+        totalPages: Math.ceil(totalSales / limit),
+        totalSales, // Total number of sales records
+      });
+    } catch (error) {
+      res.status(500).json({
+        message: "Error retrieving sales records",
+        error: error.message,
+      });
+    }
+  };
   
   
 /**
