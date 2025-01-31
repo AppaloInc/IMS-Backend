@@ -140,6 +140,46 @@ export const deleteVendor = async (req, res) => {
       res.status(500).json({ message: "Error retrieving vendors", error: error.message });
     }
   };
+  export const getVendorsByPagination = async (req, res) => {
+    try {
+      // Extract page and limit from query parameters, set default values if not provided
+      const page = parseInt(req.query.page) || 1; // Default page is 1
+      const limit = 10; // Number of vendors per page
+      const skip = (page - 1) * limit; // Calculate the number of documents to skip
+  
+      // Fetch vendors with pagination and populate the materials array with the name of each material
+      const vendors = await Vendor.find()
+        .populate({
+          path: "materials.material",
+          select: "name",
+        })
+        .skip(skip) // Skip the required number of documents
+        .limit(limit); // Limit results to 10 vendors per page
+  
+      // Modify materials to flatten the structure and include name, costPerUnit, and _id
+      const modifiedVendors = vendors.map((vendor) => ({
+        ...vendor.toObject(),
+        materials: vendor.materials.map((material) => ({
+          name: material.material?.name || null,
+          costPerUnit: material.costPerUnit,
+        })),
+      }));
+  
+      // Get total number of vendors for pagination metadata
+      const totalVendors = await Vendor.countDocuments();
+      const totalPages = Math.ceil(totalVendors / limit);
+  
+      res.status(200).json({
+        message: "Vendors retrieved successfully",
+        vendors: modifiedVendors,
+        currentPage: page,
+        totalPages,
+        totalVendors,
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Error retrieving vendors", error: error.message });
+    }
+  };
   
 /**
  * Get a vendor by ID
