@@ -78,6 +78,48 @@ export const getAllOrders = async (req, res) => {
     }
 };
 
+export const getOrdersByPagination = async (req, res) => {
+    try {
+        // Extract page and limit from query parameters, set default values if not provided
+        const page = parseInt(req.query.page) || 1; // Default page is 1
+        const limit = 10; // Number of orders per page
+        const skip = (page - 1) * limit; // Calculate the number of documents to skip
+
+        // Fetch orders with pagination and populate vendor and material names
+        const orders = await Order.find()
+            .populate({ path: "vendor", select: "name" })
+            .populate({ path: "material", select: "name" })
+            .sort({ status: 1 }) // Sorting orders by status (Pending first)
+            .skip(skip) // Skip the required number of documents
+            .limit(limit); // Limit results to 10 orders per page
+
+        // Modify orders to return formatted data
+        const modifiedOrders = orders.map(order => ({
+            _id: order._id,
+            vendor: order.vendor?.name || null,
+            material: order.material?.name || null,
+            quantity: order.quantity,
+            costPerUnit: order.costPerUnit,
+            totalCost: order.totalCost,
+            status: order.status,
+        }));
+
+        // Get total number of orders for pagination metadata
+        const totalOrders = await Order.countDocuments();
+        const totalPages = Math.ceil(totalOrders / limit);
+
+        res.status(200).json({
+            message: "Orders retrieved successfully",
+            orders: modifiedOrders,
+            currentPage: page,
+            totalPages,
+            totalOrders,
+        });
+    } catch (error) {
+        res.status(500).json({ message: "Error retrieving orders", error: error.message });
+    }
+};
+
 
 // Update order status to 'Received' and update material stock
 export const receiveOrder = async (req, res) => {

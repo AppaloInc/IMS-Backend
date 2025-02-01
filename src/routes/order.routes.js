@@ -5,22 +5,23 @@ import {
     getOrderById, 
     editOrder, 
     deleteOrder, 
-    receiveOrder 
+    receiveOrder,
+    getOrdersByPagination 
 } from '../controllers/order.controller.js';
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
 
 const router = express.Router();
 
-// Route to create a new order
-router.post('/add-order', verifyJWT, createOrder);
-
 // Route to get all orders
 router.get('/', verifyJWT, getAllOrders);
+// Route to get order by pagination
+router.get('/orders-detail/', verifyJWT, getOrdersByPagination);
+// Route to get an order by ID
 router.get('/:id',verifyJWT, getOrderById)
 
-// Route to get an order by ID
-// router.get('/:orderId', getOrderById);
+// Route to create a new order
+router.post('/add-order', verifyJWT, createOrder);
 
 // Route to update an order
 router.put('/:id', verifyJWT, editOrder);
