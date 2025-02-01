@@ -45,6 +45,38 @@ export const getMaterials = async (req, res) => {
 
 
 /**
+ * Get materials with pagination
+ */
+export const getMaterialsByPagination = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = 10;
+
+    const materials = await Material.aggregate([
+      {
+        $addFields: {
+          isLowStock: { $lt: ["$stock", "$threshold"] }
+        }
+      },
+      { $sort: { isLowStock: -1, threshold: 1, stock: 1 } }, // Prioritize low stock
+      { $skip: (page - 1) * limit },
+      { $limit: limit }
+    ]);
+
+    const totalMaterials = await Material.countDocuments();
+
+    res.status(200).json({
+      materials,
+      currentPage: page,
+      totalPages: Math.ceil(totalMaterials / limit),
+      totalMaterials
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching materials", error: error.message });
+  }
+};
+
+/**
  * Edit an existing material
  */
 export const editMaterial = async (req, res) => {
