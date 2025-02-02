@@ -5,7 +5,7 @@ const router = express.Router();
 
 // Get all materials
 router.get("/", verifyJWT, getMaterials);
-router.get('/materials-detail/', getMaterialsByPagination);
+router.get('/materials-detail/', verifyJWT, getMaterialsByPagination);
 router.get('/:id', verifyJWT, getMaterialById)
 
 // Add a new material
