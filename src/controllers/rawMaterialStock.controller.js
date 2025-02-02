@@ -66,7 +66,7 @@ export const getMaterialsByPagination = async (req, res) => {
     const totalMaterials = await Material.countDocuments();
 
     res.status(200).json({
-      materials,
+      materials: materials,
       currentPage: page,
       totalPages: Math.ceil(totalMaterials / limit),
       totalMaterials
