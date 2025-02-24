@@ -12,10 +12,10 @@ import { verifyJWT } from "../middlewares/auth.middleware.js";
 const router = express.Router();
 
 // Route to create a new product
+router.get("/production-detail/", verifyJWT, getProductionByPagination);
+router.get('/', verifyJWT, getAllProductions);
 router.post('/add-production', verifyJWT, createProduction);
 router.get('/:id', verifyJWT, getProductionById);
-router.get("/production-detail/", verifyJWT, getProductionByPagination);
 router.put('/:id', verifyJWT, updateProduction);
-router.get('/', verifyJWT, getAllProductions);
 router.delete('/:id', verifyJWT, deleteProduction);
 export default router;
