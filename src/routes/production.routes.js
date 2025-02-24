@@ -3,6 +3,7 @@ import {
     createProduction,
     updateProduction,
     getAllProductions,
+    getProductionByPagination,
     deleteProduction,
     getProductionById
 } from '../controllers/production.controller.js';
@@ -13,6 +14,7 @@ const router = express.Router();
 // Route to create a new product
 router.post('/add-production', verifyJWT, createProduction);
 router.get('/:id', verifyJWT, getProductionById);
+router.get("/production-detail/", verifyJWT, getProductionByPagination);
 router.put('/:id', verifyJWT, updateProduction);
 router.get('/', verifyJWT, getAllProductions);
 router.delete('/:id', verifyJWT, deleteProduction);

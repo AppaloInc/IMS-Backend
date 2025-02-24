@@ -247,6 +247,51 @@ export const getAllProductions = async (req, res) => {
   }
 };
 
+export const getProductionByPagination = async (req, res) => {
+  try {
+    const { page = 1, limit = 10 } = req.query;
+    const pageNumber = parseInt(page);
+    const pageSize = parseInt(limit);
+    const skip = (pageNumber - 1) * pageSize;
+
+    // Fetch paginated productions with population
+    const productions = await Production.find()
+      .populate("productId", "name")
+      .populate("quantityOfRawMaterials.rawMaterialId", "name")
+      .skip(skip)
+      .limit(pageSize);
+
+    // Get total count for pagination metadata
+    const totalProductions = await Production.countDocuments();
+    const totalPages = Math.ceil(totalProductions / pageSize);
+
+    // Format response data
+    const formattedProductions = productions.map((production) => ({
+      productionId: production._id,
+      productName: production.productId.name,
+      noOfUnitsProduced: production.noOfUnitsProduced,
+      quantityOfRawMaterials: production.quantityOfRawMaterials.map((item) => ({
+        rawMaterialName: item.rawMaterialId.name,
+        quantity: item.quantity,
+      })),
+    }));
+
+    res.status(200).json({
+      message: "Productions retrieved successfully",
+      currentPage: pageNumber,
+      totalPages,
+      totalProductions,
+      productions: formattedProductions,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error retrieving productions",
+      error: error.message,
+    });
+  }
+};
+
+
 /**
  * Get a production by ID
  */

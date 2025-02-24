@@ -108,6 +108,45 @@ export const getProductById = async (req, res) => {
   }
 };
 
+export const getProductsByPagination = async (req, res) => {
+  try {
+    const { page = 1, limit = 10 } = req.query; // Default: page 1, 10 products per page
+
+    const pageNumber = parseInt(page);
+    const pageSize = parseInt(limit);
+    const skip = (pageNumber - 1) * pageSize;
+
+    // Fetch paginated products, populating rawMaterials with only the name
+    const products = await Product.find({ isAvailable: true })
+      .populate("rawMaterials", "name")
+      .skip(skip)
+      .limit(pageSize);
+
+    // Get the total count of available products
+    const totalProducts = await Product.countDocuments({ isAvailable: true });
+    const totalPages = Math.ceil(totalProducts / pageSize);
+
+    // Format the response
+    const formattedProducts = products.map(product => ({
+      _id: product._id,
+      name: product.name,
+      quantity: product.quantity,
+      pricePerUnit: product.pricePerUnit,
+      rawMaterials: product.rawMaterials.map(material => ({ name: material.name })),
+      __v: product.__v,
+    }));
+
+    res.status(200).json({
+      message: "Products retrieved successfully",
+      currentPage: pageNumber,
+      totalPages,
+      totalProducts,
+      products: formattedProducts,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error retrieving products", error: error.message });
+  }
+};
 
 // Update a product
 export const updateProduct = async (req, res) => {
