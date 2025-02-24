@@ -36,6 +36,10 @@ const userSchema = new Schema(
         },
         refreshToken: {
             type: String
+        },
+        admin: {
+            type: Boolean,
+            default: false, // Default value for admin is false
         }
     },
     {
@@ -60,7 +64,9 @@ userSchema.methods.generateAccessToken = function(){
             _id: this._id,
             email: this.email,
             username: this.username,
-            fullName: this.fullName
+            fullName: this.fullName,
+            admin: this.admin // Include admin status in the token
+
         },
         process.env.ACCESS_TOKEN_SECRET,
         {

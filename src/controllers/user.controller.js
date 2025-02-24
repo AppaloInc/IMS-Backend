@@ -3,7 +3,7 @@ import { apiError } from "../utils/apiError.js";
 import { User } from "../models/user.model.js";
 import { apiResponse } from "../utils/apiResponse.js";
 import jwt from "jsonwebtoken";
-// import mongoose from "mongoose";
+import mongoose from "mongoose";
 
 const generateAccessAndRefereshTokens = async (userId) => {
   try {
@@ -23,17 +23,15 @@ const generateAccessAndRefereshTokens = async (userId) => {
   }
 };
 
+// get user details from frontend
+// validation - not empty
+// check if user already exists: username, email
+// create user object - create entry in db
+// remove password and refresh token field from response
+// check for user creation
+// return res
 const registerUser = asyncHandler(async (req, res) => {
-  // get user details from frontend
-  // validation - not empty
-  // check if user already exists: username, email
-  // create user object - create entry in db
-  // remove password and refresh token field from response
-  // check for user creation
-  // return res
-
-  const { fullName, email, username, password } = req.body;
-
+  const { fullName, email, username, password, admin } = req.body;
   if (
     [fullName, email, username, password].some((field) => field?.trim() === "")
   ) {
@@ -47,12 +45,12 @@ const registerUser = asyncHandler(async (req, res) => {
   if (existedUser) {
     throw new apiError(409, "User with email or username already exists");
   }
-  
   const user = await User.create({
     fullName,
     email,
     password,
     username: username.toLowerCase(),
+    admin: admin || false, // Set admin to false if not provided
   });
 
   const createdUser = await User.findById(user._id).select(
@@ -62,7 +60,6 @@ const registerUser = asyncHandler(async (req, res) => {
   if (!createdUser) {
     throw new apiError(500, "Something went wrong while registering the user");
   }
-
   return res
     .status(201)
     .json(new apiResponse(200, createdUser, "User registered Successfully"));
@@ -289,6 +286,99 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
     .status(200)
     .json(new apiResponse(200, user, "Account details updated successfully"));
 });
+
+
+const getUsersByPagination = async (req, res) => {
+  try {
+    const currentUser = req.user;
+    if (!currentUser) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const { page = 1, limit = 10 } = req.query;
+    const pageNumber = parseInt(page);
+    const pageSize = parseInt(limit);
+    const skip = (pageNumber - 1) * pageSize;
+
+    // Filter to get non-admin users OR the current user
+    const filter = {
+      $or: [
+        { admin: false },
+        { _id: currentUser._id }
+      ]
+    };
+
+    // Fetch users with pagination
+    const users = await User.find(filter)
+      .select('-password -refreshToken')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(pageSize);
+
+    // Get total count for pagination
+    const totalUsers = await User.countDocuments(filter);
+    const totalPages = Math.ceil(totalUsers / pageSize);
+
+    // Format response with current user flag
+    const formattedUsers = users.map(user => ({
+      _id: user._id,
+      username: user.username,
+      email: user.email,
+      fullName: user.fullName,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt
+    }));
+
+    res.status(200).json({
+      message: "Users retrieved successfully",
+      currentPage: pageNumber,
+      totalPages,
+      totalUsers,
+      users: formattedUsers,
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      message: "Error retrieving users", 
+      error: error.message 
+    });
+  }
+};
+
+const deleteUser = asyncHandler(async (req, res) => {
+  // Get current user from request
+  const currentUser = req.user;
+  
+  // Only allow admins to delete users
+  if (!currentUser?.admin) {
+    throw new apiError(403, "Unauthorized access");
+  }
+
+  // Get user ID from params
+  const { id } = req.params;
+  
+  // Validate MongoDB ID
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw new apiError(400, "Invalid user ID");
+  }
+
+  // Prevent self-deletion
+  if (id === currentUser._id.toString()) {
+    throw new apiError(400, "Cannot delete your own account");
+  }
+
+  // Find and delete user
+  const deletedUser = await User.findByIdAndDelete(id);
+  
+  if (!deletedUser) {
+    throw new apiError(404, "User not found");
+  }
+
+  return res.status(200)
+    .json(new apiResponse(200, {}, "User deleted successfully"));
+});
+
+
+
 export {
     registerUser,
     loginUser,
@@ -297,4 +387,6 @@ export {
     getCurrentUser,
     updateAccountDetails,
     changeCurrentPassword,
+    getUsersByPagination,
+    deleteUser,
   };
